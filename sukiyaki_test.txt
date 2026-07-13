@@ -1,0 +1,32 @@
+﻿=== OLD (select_one - first match) ===
+  [class*=content]: 16 chars, preview: Sign Up or Login
+
+=== NEW (select all - pick best) ===
+  NEW BEST: [class*=content] (16 chars)
+  NEW BEST: [class*=content] (1746 chars)
+
+Extracted text: 1801 chars
+Preview: 4.0
+(11 Reviews)
+$$$
+Orchard
+Japanese
+Dishes
+Reviews
+About
+Similar
+Menus
+Menu
+See More
+Reviews
+4.0
+(11 Reviews)
+Food:
+3.8
+Service:
+4.5
+Atmosphere:
+4.1
+What Diners
+                                            Say
+Only diners who attend their reservations or redeemed their vouchers can leave reviews. C

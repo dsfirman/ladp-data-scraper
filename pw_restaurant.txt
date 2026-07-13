@@ -1,0 +1,36 @@
+﻿.\.venv\Scripts\python.exe : Traceback (most recent call last):
+At line:1 char:40
++ ... d D:\projects\ladp\ladp-data-scraper; .\.venv\Scripts\python.exe -c "
++                                           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Traceback (most recent call last)::String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+  File "<string>", line 18, in <module>
+    print(f'Selector {sel}: {len(text)} chars, preview: {text[:80]}')
+    ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\imanv\AppData\Local\Python\pythoncore-3.14-64\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode characters in position 79-85: character maps to <undefined>
+Selector [class*=content]: 16 chars, preview: Sign Up or Login
+Selector [class*=content]: 2207 chars, preview: SukiyakiJIN4.0(11 Reviews)$$$$$OrchardJapaneseDishesReviewsAboutSimilarMenusMenu
+Selector [class*=content]: 46 chars, preview: SukiyakiJIN4.0(11 Reviews)$$$$$OrchardJapanese
+Selector [class*=content]: 11 chars, preview: SukiyakiJIN
+Selector [class*=content]: 15 chars, preview: 4.0(11 Reviews)
+Selector [class*=content]: 20 chars, preview: $$$$$OrchardJapanese
+Selector [class*=content]: 25 chars, preview: DishesReviewsAboutSimilar
+Selector [class*=content]: 0 chars, preview: 
+Selector [class*=content]: 2136 chars, preview: MenusMenuSee MoreReviews4.0(11 Reviews)Food:3.8Service:4.5Atmosphere:4.1What Din
+Selector [class*=content]: 15 chars, preview: 4.0(11 Reviews)
+Selector [class*=content]: 71 chars, preview: Salt & Soul$$$$$WesternBarModern EuropeanFrenchItalianCafeTanjong Pagar
+Selector [class*=content]: 71 chars, preview: Salt & Soul$$$$$WesternBarModern EuropeanFrenchItalianCafeTanjong Pagar
+Selector [class*=content]: 71 chars, preview: Salt & Soul$$$$$WesternBarModern EuropeanFrenchItalianCafeTanjong Pagar
+Selector [class*=content]: 67 chars, preview: Sofra Turkish Cafe & Restaurant$$$$$TurkishHalal CertifiedEsplanade
+Selector [class*=content]: 67 chars, preview: Sofra Turkish Cafe & Restaurant$$$$$TurkishHalal CertifiedEsplanade
+Selector [class*=content]: 67 chars, preview: Sofra Turkish Cafe & Restaurant$$$$$TurkishHalal CertifiedEsplanade
+Selector [class*=content]: 91 chars, preview: Supply & Demand (Orchard Gateway)$$$$$ItalianVegetarian FriendlyModern AsianWest
+Selector [class*=content]: 91 chars, preview: Supply & Demand (Orchard Gateway)$$$$$ItalianVegetarian FriendlyModern AsianWest
+Selector [class*=content]: 91 chars, preview: Supply & Demand (Orchard Gateway)$$$$$ItalianVegetarian FriendlyModern AsianWest
+Selector [class*=content]: 87 chars, preview: Violet Oon Singapore (ION Orchard)$$$$$PeranakanVegetarian FriendlyLocalHigh Tea
+Selector [class*=content]: 87 chars, preview: Violet Oon Singapore (ION Orchard)$$$$$PeranakanVegetarian FriendlyLocalHigh Tea
+Selector [class*=content]: 87 chars, preview: Violet Oon Singapore (ION Orchard)$$$$$PeranakanVegetarian FriendlyLocalHigh Tea

@@ -18,4 +18,5 @@ class ScrapeResponse(BaseModel):
 
 
 class ProcessRequest(BaseModel):
-    batch_size: int = 10
+    batch_size: int | None = None
+    data_filename: str | None = None

@@ -1,0 +1,16 @@
+﻿Restaurant links: 40
+  href=https://www.chope.co/singapore-restaurants/category/restaurant/1 text_len=20 has_img=False
+  href=https://www.chope.co/singapore-restaurants/category/restaurant/1 text_len=20 has_img=False
+  href=https://www.chope.co/singapore-restaurants/restaurant/sukiyakijin text_len=0 has_img=True
+  href=https://www.chope.co/singapore-restaurants/restaurant/fireplace-by-bedrock text_len=0 has_img=True
+  href=https://www.chope.co/singapore-restaurants/restaurant/ristorante-luka-tanjong-pagar text_len=0 has_img=True
+  href=https://www.chope.co/singapore-restaurants/restaurant/cook-brew text_len=0 has_img=True
+  href=https://www.chope.co/singapore-restaurants/restaurant/cheval-cafe-bar-bistro-kranji text_len=0 has_img=True
+  href=https://www.chope.co/singapore-restaurants/restaurant/brotzeit-westgate text_len=0 has_img=True
+  href=https://www.chope.co/singapore-restaurants/restaurant/flower-pig-360-tanjong-pagar text_len=0 has_img=True
+  href=https://www.chope.co/singapore-restaurants/restaurant/new-fut-kai-vegetarian text_len=0 has_img=True
+  href=https://www.chope.co/singapore-restaurants/restaurant/hanashizuku-japanese-cuisine text_len=0 has_img=True
+  href=https://www.chope.co/singapore-restaurants/restaurant/jiho-samgyetang-sbcd text_len=0 has_img=True
+  href=https://www.chope.co/singapore-restaurants/restaurant/seoul-garden-marina-square text_len=0 has_img=True
+  href=https://www.chope.co/singapore-restaurants/restaurant/urban-curry-kebab text_len=0 has_img=True
+  href=https://www.chope.co/singapore-restaurants/restaurant/the-garden-slug-family-restaurant-pet-friendly text_len=0 has_img=True

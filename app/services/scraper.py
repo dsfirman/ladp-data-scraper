@@ -12,6 +12,8 @@ from app.config import settings
 
 _data_dir = Path(os.path.normpath(settings.data_dir))
 
+MAX_DETAIL_URLS = 70
+
 NAV_KEYWORDS = [
     "home", "about", "contact", "faq", "privacy", "terms", "sitemap",
     "sign in", "login", "register", "search", "blog", "career", "help",
@@ -533,6 +535,9 @@ def _collect_event_urls_and_listing(url: str) -> tuple[str, list[tuple[str, str]
                 for k, v in month_urls.items():
                     if k not in all_urls:
                         all_urls[k] = v
+                if len(all_urls) >= MAX_DETAIL_URLS:
+                    _log(f"Reached max detail URLs ({MAX_DETAIL_URLS}), stopping")
+                    break
 
             if iteration > 0:
                 height_before = page.evaluate("document.body.scrollHeight")
@@ -580,6 +585,9 @@ def _collect_event_urls_and_listing(url: str) -> tuple[str, list[tuple[str, str]
                     groups2 = _extract_event_containers(page, url)
                     all_event_groups.extend(groups2)
                     _extract_links(page, url, all_urls)
+                    if len(all_urls) >= MAX_DETAIL_URLS:
+                        _log(f"Reached max detail URLs ({MAX_DETAIL_URLS}), stopping")
+                        break
                 else:
                     page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
                     page.wait_for_timeout(800)
@@ -618,17 +626,19 @@ def _extract_text_from_url(target_url: str) -> tuple[str, str]:
     def _parse(html: str) -> tuple[str, str]:
         soup = BeautifulSoup(html, "html.parser")
         label = "body"
-        content_el = soup
+        best_el = soup
+        best_len = 0
         for sel in ["main", "article", "[role=main]", "[class*=content]", "[class*=detail]"]:
-            el = soup.select_one(sel)
-            if el:
-                label = _element_dom_path(el)
-                content_el = el
-                break
+            for el in soup.select(sel):
+                text_len = len(el.get_text(strip=True))
+                if text_len > best_len:
+                    best_len = text_len
+                    label = _element_dom_path(el)
+                    best_el = el
         for sel in _NOISE_TAGS:
-            for el in content_el.select(sel):
+            for el in best_el.select(sel):
                 el.decompose()
-        text = content_el.get_text(separator="\n", strip=True)
+        text = best_el.get_text(separator="\n", strip=True)
         lines = [l for l in text.split('\n') if len(l.strip()) > 2]
         text = '\n'.join(lines)
         return text, label
@@ -670,6 +680,9 @@ async def fetch_and_extract_text(client: httpx.AsyncClient, url: str) -> str:
     )
 
     if url_anchor_pairs:
+        if len(url_anchor_pairs) > MAX_DETAIL_URLS:
+            _log(f"Limiting detail URLs from {len(url_anchor_pairs)} to {MAX_DETAIL_URLS}")
+            url_anchor_pairs = url_anchor_pairs[:MAX_DETAIL_URLS]
         detail_texts = await asyncio.gather(
             *[asyncio.to_thread(_extract_text_from_url, u) for u, _ in url_anchor_pairs],
             return_exceptions=True,

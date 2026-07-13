@@ -1,0 +1,6 @@
+﻿Status: 200, final_url: https://www.chope.co/singapore-restaurants/restaurant/sukiyakijin, length: 198208
+Selector [class*=content]: 16 chars, preview: Sign Up or Login
+Selector [class*=detail]: 699 chars, preview: What Diners
+                                            SayOnly diners who attend their reservations
+Body text: 4726 chars
+Preview: SukiyakiJIN - Book and Save On Chope Sign Up or Login Visit our other websites: For Restaurants Get your restaurant listed on our platforms and connect to more diners. Restaurant Directory Guides Rewa

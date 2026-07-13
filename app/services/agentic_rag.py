@@ -1,5 +1,6 @@
 import json
 import math
+import re
 import traceback
 from datetime import datetime
 from pathlib import Path
@@ -20,6 +21,28 @@ from langchain_community.utilities.tavily_search import TavilySearchAPIWrapper
 from app.config import settings
 from app.core.prompts import EXTRACT_POI_PROMPT
 
+
+def _clean_json(text: str) -> str:
+    text = re.sub(r"^```(?:json)?\s*|\s*```$", "", text.strip())
+    text = re.sub(r",\s*([}\]])", r"\1", text)
+    # Fix malformed openingHours values like "05/07/2026":"":"" → "05/07/2026": ""
+    text = re.sub(r':\s*""\s*:\s*""', ': ""', text)
+    return text
+
+
+def _parse_json(text: str) -> dict:
+    cleaned = _clean_json(text)
+    try:
+        return json.loads(cleaned)
+    except json.JSONDecodeError as e:
+        col = int(re.search(r"column (\d+)", str(e)).group(1)) if re.search(r"column (\d+)", str(e)) else 0
+        start = max(0, col - 100)
+        end = min(len(cleaned), col + 100)
+        print(f"[_parse_json] Failed to parse JSON (len={len(cleaned)}): {e}")
+        print(f"[_parse_json] Around error column {col}: {cleaned[start:end]}")
+        raise
+
+
 CHROMA_DIR = Path(settings.data_dir) / "chroma_db"
 DB_NAME = 'vectorstore'
 COLLECTION_NAME = "places_of_interest"
@@ -27,8 +50,7 @@ COLLECTION_NAME = "places_of_interest"
 POI_FIELDS = [
     "subjectName", "subjectType", "description",
     "locationName", "locationType", "address",
-    "fee", "startingDate", "endingDate",
-    "openingHours",
+    "fee", "openingHours",
 ]
 METRIC_FIELDS = ["description", "locationName"]
 
@@ -44,6 +66,7 @@ llm = AzureChatOpenAI(
     api_version=settings.azure_openai_api_version,
     azure_endpoint=settings.azure_openai_endpoint,
     api_key=settings.azure_openai_api_key,
+    temperature=0,
 )
 
 
@@ -62,31 +85,38 @@ def create_vectorstore(chunks) -> Chroma:
     return vectorstore
 
 
-def index_documents() -> VectorStoreRetriever:
+def index_documents(data_filename: str | None = None) -> VectorStoreRetriever:
     data_dir = Path(settings.data_dir)
     if not data_dir.exists():
         raise FileNotFoundError(f"DATA_DIR '{data_dir}' does not exist")
 
-    # Skip loading, splitting, and restoring if vector database already exists
-    if CHROMA_DIR.exists():
-        client = PersistentClient(path=str(CHROMA_DIR))
-        if COLLECTION_NAME in [c.name for c in client.list_collections()]:
-            existing = Chroma(
-                embedding_function=embeddings,
-                persist_directory=str(CHROMA_DIR),
-                collection_name=COLLECTION_NAME,
-            )
-            num_vectors = existing._collection.count()
-            if num_vectors > 0:
-                print(f"Vector database already exists with {num_vectors} vectors, skipping indexing")
-                return existing.as_retriever(search_kwargs={"k": 3})
+    if data_filename:
+        filepath = data_dir / data_filename
+        if not filepath.exists():
+            filepath = data_dir / f"{data_filename}.txt"
+        if not filepath.exists():
+            raise FileNotFoundError(f"Data file '{data_filename}' not found in {data_dir}")
+        loader = TextLoader(str(filepath), encoding="utf-8")
+        docs = loader.load()
+    else:
+        if CHROMA_DIR.exists():
+            client = PersistentClient(path=str(CHROMA_DIR))
+            if COLLECTION_NAME in [c.name for c in client.list_collections()]:
+                existing = Chroma(
+                    embedding_function=embeddings,
+                    persist_directory=str(CHROMA_DIR),
+                    collection_name=COLLECTION_NAME,
+                )
+                num_vectors = existing._collection.count()
+                if num_vectors > 0:
+                    print(f"Vector database already exists with {num_vectors} vectors, skipping indexing")
+                    return existing.as_retriever(search_kwargs={"k": 3})
+        loader = DirectoryLoader(
+            str(data_dir), glob="*.txt", loader_cls=TextLoader, loader_kwargs={"encoding": "utf-8"}
+        )
+        docs = loader.load()
 
-    loader = DirectoryLoader(
-        str(data_dir), glob="*.txt", loader_cls=TextLoader, loader_kwargs={"encoding": "utf-8"}
-    )
-    docs = loader.load()
-
-    splitter = SemanticChunker(embeddings=embeddings, breakpoint_threshold_type="percentile")
+    splitter = SemanticChunker(embeddings=embeddings, breakpoint_threshold_type="percentile", breakpoint_threshold_amount=70)
     all_chunks = []
     for doc in docs:
         text_chunks = splitter.split_text(doc.page_content)
@@ -106,6 +136,25 @@ def index_documents() -> VectorStoreRetriever:
     chunks = all_chunks
 
     print(f"Number of chunks: {len(chunks)}")
+
+    if data_filename and CHROMA_DIR.exists():
+        client = PersistentClient(path=str(CHROMA_DIR))
+        if COLLECTION_NAME in [c.name for c in client.list_collections()]:
+            existing = Chroma(
+                embedding_function=embeddings,
+                persist_directory=str(CHROMA_DIR),
+                collection_name=COLLECTION_NAME,
+            )
+            source_path = str(filepath.resolve())
+            matching = existing._collection.get(where={"source": source_path})
+            if matching and matching.get("ids"):
+                print(f"Removing {len(matching['ids'])} existing chunks for '{data_filename}'")
+                existing._collection.delete(ids=matching["ids"])
+            existing.add_documents(chunks)
+            print(f"Updated vectorstore with {len(chunks)} new chunks for '{data_filename}'")
+            num_vectors = existing._collection.count()
+            print(f"Total vectors: {num_vectors}")
+            return existing.as_retriever(search_kwargs={"k": 3})
 
     vectorstore = create_vectorstore(chunks)
     collections = vectorstore._client.list_collections()
@@ -130,8 +179,8 @@ def format_docs(docs):
     return "\n\n".join(doc.page_content for doc in docs)
 
 
-def create_rag_chain():
-    index_documents()
+def create_rag_chain(data_filename: str | None = None):
+    index_documents(data_filename)
     prompt = create_custom_rag_prompt()
 
     vectorstore = Chroma(
@@ -141,7 +190,7 @@ def create_rag_chain():
     )
 
     def process_by_source(inputs):
-        batch_size = inputs["batchSize"]
+        batch_size = inputs.get("batchSize")
         raw = vectorstore.get(include=["documents", "metadatas"])
         docs_by_source = {}
         for doc, meta in zip(raw["documents"], raw["metadatas"]):
@@ -198,7 +247,7 @@ def create_rag_chain():
             if key in search_cache:
                 return search_cache[key]
             try:
-                results = vectorstore.similarity_search_with_relevance_scores(key, k=1)
+                results = vectorstore.similarity_search_with_relevance_scores(key, k=3)
             except Exception as e:
                 traceback.print_exc()
                 print(f"[get_provenance] similarity_search failed: {e}")
@@ -219,9 +268,10 @@ def create_rag_chain():
             context = "\n\n".join(docs)
             answer = (prompt | llm | StrOutputParser()).invoke({
                 "context": context,
-                "batchSize": batch_size,
+                "batchSize": batch_size if batch_size is not None else 999,
+                "currentDate": datetime.now().strftime("%d/%m/%Y"),
             })
-            data = json.loads(answer)
+            data = _parse_json(answer)
             for poi in data.get("pointsOfInterest", []):
                 fill_missing_from_web(poi)
                 poi["source"] = source
@@ -250,9 +300,9 @@ def create_rag_chain():
     return RunnablePassthrough.assign(result=process_by_source)
 
 
-def run_extraction(batch_size: int = 10) -> dict:
+def run_extraction(batch_size: int | None = None, data_filename: str | None = None) -> dict:
     try:
-        chain = create_rag_chain()
+        chain = create_rag_chain(data_filename)
         result = chain.invoke({"batchSize": batch_size})
         data = result["result"]
     except Exception as e:

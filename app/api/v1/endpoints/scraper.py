@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["scraper"])
 
-SCRAPE_TIMEOUT = 120
+SCRAPE_TIMEOUT = 300
 
 
 @router.post("/scrape", response_model=ScrapeResponse)
@@ -50,8 +50,8 @@ async def scrape_website(
 @router.post("/process")
 async def process_extraction(body: ProcessRequest):
     try:
-        logger.info("Starting extraction with batch_size=%s", body.batch_size)
-        result = await asyncio.to_thread(run_extraction, body.batch_size)
+        logger.info("Starting extraction with batch_size=%s, data_filename=%s", body.batch_size, body.data_filename)
+        result = await asyncio.to_thread(run_extraction, body.batch_size, body.data_filename)
         return result
     except Exception as e:
         logger.error("Extraction failed: %s\n%s", e, traceback.format_exc())
